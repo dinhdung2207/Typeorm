@@ -5,6 +5,12 @@ import { CreateExpenseDto } from './dtos/create-expense.dto';
 import { In, Repository } from 'typeorm';
 import { IUserData } from '../auth/interfaces/user-data.interface';
 import { UsersService } from '../users/users.service';
+import { PaginationDto } from './dtos/pagination.dto';
+import {
+  PageMetaDto,
+  PageOptionsDto,
+} from '../utils/customer-decorators/pagination/page-meta.dto';
+import { PageDto } from '../utils/customer-decorators/pagination/page.dto';
 
 @Injectable()
 export class ExpensesService {
@@ -40,10 +46,22 @@ export class ExpensesService {
     });
   }
 
-  async findWithUserId(userData: IUserData): Promise<Expense[]> {
+  async findWithUserId(
+    userData: IUserData,
+    pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<any>> {
     const currentUser = await this.usersService.findByToken(userData);
+    const itemCount = await this.expensesRepository.countBy({
+      user: {
+        id: currentUser.id,
+      },
+    });
+    const pageMetaDto = new PageMetaDto({
+      pageOptionsDto,
+      itemCount,
+    });
 
-    return await this.expensesRepository.find({
+    const entities = await this.expensesRepository.find({
       where: {
         user: {
           id: currentUser.id,
@@ -60,11 +78,19 @@ export class ExpensesService {
           email: true,
         },
       },
+      skip: pageOptionsDto.skip,
+      take: pageOptionsDto.take,
     });
+
+    return new PageDto(entities, pageMetaDto);
   }
 
   async findAll(): Promise<Expense[]> {
-    return await this.expensesRepository.find({});
+    return await this.expensesRepository.find({
+      relations: {
+        categories: true,
+      },
+    });
   }
 
   async findDetailsWithId(expenseId: string): Promise<Expense> {
