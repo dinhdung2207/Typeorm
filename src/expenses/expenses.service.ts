@@ -5,12 +5,9 @@ import { CreateExpenseDto } from './dtos/create-expense.dto';
 import { In, Repository } from 'typeorm';
 import { IUserData } from '../auth/interfaces/user-data.interface';
 import { UsersService } from '../users/users.service';
-import { PaginationDto } from './dtos/pagination.dto';
-import {
-  PageMetaDto,
-  PageOptionsDto,
-} from '../utils/customer-decorators/pagination/page-meta.dto';
+import { PageOptionsDto } from '../utils/customer-decorators/pagination/page-options.dto';
 import { PageDto } from '../utils/customer-decorators/pagination/page.dto';
+import { PageMetaDto } from '../utils/customer-decorators/pagination/page-meta.dto';
 
 @Injectable()
 export class ExpensesService {
@@ -51,38 +48,26 @@ export class ExpensesService {
     pageOptionsDto: PageOptionsDto,
   ): Promise<PageDto<any>> {
     const currentUser = await this.usersService.findByToken(userData);
-    const itemCount = await this.expensesRepository.countBy({
-      user: {
-        id: currentUser.id,
-      },
-    });
-    const pageMetaDto = new PageMetaDto({
-      pageOptionsDto,
-      itemCount,
-    });
-
-    const entities = await this.expensesRepository.find({
+    const { page, take } = pageOptionsDto;
+    console.log('🚀 ~ ExpensesService ~ take:', typeof take);
+    console.log('🚀 ~ ExpensesService ~ page:', typeof page);
+    const expenses = await this.expensesRepository.find({
       where: {
         user: {
           id: currentUser.id,
         },
       },
-      relations: {
-        categories: true,
-        user: true,
-      },
-      select: {
-        user: {
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-      skip: pageOptionsDto.skip,
-      take: pageOptionsDto.take,
+      take,
+      skip: pageOptionsDto.skip(),
     });
+    const count = await this.expensesRepository.countBy({
+      user: {
+        id: currentUser.id,
+      },
+    });
+    const pageMeta = new PageMetaDto(page, take, count);
 
-    return new PageDto(entities, pageMetaDto);
+    return new PageDto(expenses, pageMeta);
   }
 
   async findAll(): Promise<Expense[]> {

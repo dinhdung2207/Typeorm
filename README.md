@@ -21,6 +21,15 @@
 </p>
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+ 
+## Pagination
+1. Create a data model
+2. Create `response result` with `meta data` when using pagination : 
+**`PageDto`**
+- `meta data`: **`PageMetaDto`** should include several field: `page`, `take`, `itemCount`, `pageCount`, `hasPreviousPage`, `hasNextPage` : 
+- using `class constructor` to format `response result`
+- input : object  **`PageMetaDtoParameters`** should contain `pageOptionsDto, itemCount` :
+- `pageOptionsDto` should include : `order`, `page`, `take`
 
 ## Description
 

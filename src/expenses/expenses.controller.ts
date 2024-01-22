@@ -1,6 +1,5 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Get,
   Param,
@@ -8,19 +7,20 @@ import {
   Query,
   Request,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { CreateExpenseDto } from './dtos/create-expense.dto';
 import { ExpensesService } from './expenses.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../utils/guards/auth.guard';
-import { PageOptionsDto } from '../utils/customer-decorators/pagination/page-meta.dto';
+import { PageOptionsDto } from '../utils/customer-decorators/pagination/page-options.dto';
+import { ApiPaginatedResponse } from '../utils/customer-decorators/pagination/api-pagination-res';
+import { Expense } from '../entities';
 
 @ApiTags('Expenses API')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
-@Controller('expenses')
 // @UseInterceptors(ClassSerializerInterceptor)
+@Controller('expenses')
 export class ExpensesController {
   constructor(private expensesService: ExpensesService) {}
 
@@ -30,7 +30,11 @@ export class ExpensesController {
   }
 
   @Get('/your-expenses')
+  @ApiPaginatedResponse(Expense)
   getAllExpensesUser(@Request() req, @Query() pageOptionsDto: PageOptionsDto) {
+    const { page, take } = pageOptionsDto;
+    console.log('🚀 ~ ExpensesService ~ take:', typeof take);
+    console.log('🚀 ~ ExpensesService ~ page:', typeof page);
     return this.expensesService.findWithUserId(req.user.data, pageOptionsDto);
   }
 

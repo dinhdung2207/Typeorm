@@ -19,15 +19,14 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
   app.enableCors();
 
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new DatabaseExceptionFilter());
+  app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
     }),
   );
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalFilters(new DatabaseExceptionFilter());
-  app.useGlobalInterceptors(new TransformInterceptor());
-
   await app.listen(3000);
 }
 bootstrap();
